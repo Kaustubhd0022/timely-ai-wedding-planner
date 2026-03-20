@@ -123,10 +123,6 @@ function DashboardContent() {
   const completedCount = tasks.filter(t => t.status === "Done").length;
   const totalTasks = tasks.length;
   const progress = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
-  
-  const nextAction = getNextBestAction(tasks, dependencies);
-  const alerts = getSmartAlerts(tasks, dependencies);
-
   const [isOptinOpen, setIsOptinOpen] = useState(false);
 
   const daysToWedding = wedding?.wedding_date 
@@ -151,6 +147,9 @@ function DashboardContent() {
       return new Date(a.deadline_date).getTime() - new Date(b.deadline_date).getTime();
     })
     .slice(0, 3);
+
+  const nextAction = getNextBestAction(tasks, dependencies);
+  const alerts = getSmartAlerts(tasks, dependencies);
 
   async function generateDailyAIPlans(allTasks: any[]) {
     const currentTop = allTasks
@@ -340,9 +339,9 @@ function DashboardContent() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  >
-                    {task.status === "Done" && <CheckCircle2 size={14} className="text-primary fill-primary/10" />}
-                  </button>
+                  className="bg-white p-6 rounded-[2rem] md:rounded-[2.5rem] border shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                  onClick={() => window.location.href=`/app/tasks?wedding_id=${weddingId}`}
+                >
                   <div className="flex-1 space-y-1">
                     <h4 className="font-serif text-lg text-stone-900 leading-tight">{task.name}</h4>
                     <div className="flex items-center gap-2 mb-2">
@@ -350,6 +349,9 @@ function DashboardContent() {
                         <Clock size={8} /> {new Date(task.deadline_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                       </span>
                       <span className="text-[9px] font-black uppercase text-primary bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">Priority {task.priority}</span>
+                      {task.status === "Done" && (
+                        <span className="text-[9px] font-black uppercase text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">Settled</span>
+                      )}
                     </div>
                     {isAiLoading ? (
                       <div className="h-3 w-3/4 bg-muted animate-pulse rounded mt-2" />
@@ -438,6 +440,11 @@ function DashboardContent() {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            className="group relative"
+          >
+            <TiltCard>
+              <Card className="rounded-[2rem] md:rounded-[2.5rem] border border-white/50 glass shadow-[0_8px_32px_rgba(0,0,0,0.04)] overflow-hidden relative group transition-all duration-700 hover:shadow-xl hover:-translate-y-1">
+                <div className="hidden md:block absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full -mr-32 -mt-32 blur-[100px] pointer-events-none" />
                 <div className="grid md:grid-cols-3">
                   <div className="md:col-span-2 p-6 md:p-10 space-y-6 md:space-y-8 relative z-10 w-full overflow-hidden">
                     <div className="space-y-4">
@@ -475,14 +482,6 @@ function DashboardContent() {
               </Card>
             </TiltCard>
           </motion.div>
-        ) : (
-          <Card className="p-16 text-center rounded-[3rem] bg-stone-50 border-2 border-dashed border-stone-200">
-             <div className="h-20 w-20 bg-green-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                <Trophy size={40} className="text-green-600" />
-             </div>
-             <h3 className="text-3xl font-serif text-stone-900">Your roadmap is clear.</h3>
-             <p className="text-stone-500 text-lg max-w-md mx-auto mt-2">You've completed every unblocked task. A perfect moment to rest and look forward to the celebration.</p>
-          </Card>
         )}
       </section>
 
@@ -641,12 +640,18 @@ function DashboardContent() {
                       <div className={`h-14 w-14 shrink-0 rounded-[1.25rem] flex items-center justify-center transition-transform group-hover:scale-110 ${
                         blocked ? 'bg-stone-200 text-stone-500' : 'bg-white shadow-sm text-primary'
                       }`}>
-                        {blocked ? <Lock size={24} /> : <div className="h-6 w-6 border-2 border-stone-200 rounded-full" />}
+                        {blocked ? (
+                          <Lock size={24} />
+                        ) : (
+                          <div className="h-6 w-6 border-2 border-stone-200 rounded-full" />
+                        )}
                       </div>
                       <div className="flex-1">
                         <h4 className="font-bold text-xl text-stone-800 flex items-center gap-3">
                           {task.name} 
-                          {blocked && <span className="text-[9px] font-black uppercase tracking-[0.2em] bg-stone-200 text-stone-500 px-2 py-1 rounded-lg border border-stone-300">Blocked</span>}
+                          {blocked && (
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] bg-stone-200 text-stone-500 px-2 py-1 rounded-lg border border-stone-300">Blocked</span>
+                          )}
                         </h4>
                         <p className="text-[10px] text-stone-400 font-black uppercase tracking-[0.2em] mt-1">{task.category}</p>
                       </div>
