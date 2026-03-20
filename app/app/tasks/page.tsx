@@ -142,25 +142,27 @@ function TasksContent() {
         )}
       </AnimatePresence>
 
-      <header className="flex justify-between items-end">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-0">
         <div>
-          <h1 className="text-4xl font-serif">Task Manager</h1>
+          <h1 className="text-3xl md:text-4xl font-serif">Task Manager</h1>
           <p className="text-muted-foreground mt-2">Personalized planning journey for your special day.</p>
         </div>
-        <NewTaskModal weddingId={weddingId || ""} onTaskCreated={fetchTasks} />
+        <div className="w-full md:w-auto">
+          <NewTaskModal weddingId={weddingId || ""} onTaskCreated={fetchTasks} />
+        </div>
       </header>
 
-      <div className="flex flex-wrap gap-4 items-center bg-card p-4 rounded-2xl border shadow-sm">
-        <div className="flex-1 min-w-[300px] flex items-center gap-2 px-3 border rounded-xl bg-background">
-          <Search size={18} className="text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center bg-card p-4 rounded-2xl border shadow-sm">
+        <div className="w-full sm:flex-1 min-w-[300px] flex items-center gap-2 px-3 border rounded-xl bg-background">
+          <Search size={18} className="text-muted-foreground shrink-0" />
           <Input 
             placeholder="Search tasks (e.g. Venue, Catering...)" 
-            className="border-none shadow-none focus-visible:ring-0 px-0"
+            className="border-none shadow-none focus-visible:ring-0 px-0 w-full"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex gap-2 overflow-x-auto pb-1 w-full sm:w-auto scrollbar-hide">
           {["All", "Todo", "Done", ...categories].map((filter) => (
             <button
               key={filter}
@@ -200,9 +202,9 @@ function TasksContent() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className={`group flex items-center gap-6 p-6 rounded-[2rem] border bg-card/60 backdrop-blur-md transition-all duration-500 ease-out ${
+                className={`group flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 p-6 rounded-[2rem] border bg-card/60 backdrop-blur-md transition-all duration-500 ease-out ${
                   task.status === "Done" ? "opacity-60 grayscale-[0.5]" : 
-                  blocked ? "opacity-30 grayscale bg-muted/20 border-dashed" : "shadow-sm border-white/40 hover:bg-white/80 hover:shadow-xl hover:-translate-y-1"
+                  blocked ? "opacity-30 grayscale bg-muted/20 border-dashed" : "shadow-sm border-white/40 hover:bg-white/80 hover:shadow-xl sm:hover:-translate-y-1"
                 }`}
               >
                 <button 
@@ -235,11 +237,11 @@ function TasksContent() {
                   </AnimatePresence>
                 </button>
                 
-                <div className="flex-1">
+                <div className="flex-1 w-full">
                   <h3 className={`text-xl font-bold mb-1 ${task.status === "Done" ? "line-through text-muted-foreground" : ""}`}>
                     {task.name} {blocked && <span className="text-[10px] font-bold uppercase tracking-wider bg-muted-foreground/10 px-2 py-0.5 rounded text-muted-foreground ml-2">Blocked</span>}
                   </h3>
-                  <div className="flex flex-wrap items-center gap-4 text-xs">
+                  <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs">
                     <span className="flex items-center gap-1.5 font-medium px-2.5 py-1 bg-muted rounded-full">
                       <Clock size={12} /> {new Date(task.deadline_date).toLocaleDateString()}
                     </span>
@@ -252,14 +254,14 @@ function TasksContent() {
                       </span>
                     )}
                     {blocked && blockers.length > 0 && (
-                      <span className="text-muted-foreground italic truncate max-w-xs xl:max-w-md">
-                        Requires: {blockers.map(b => b.name).join(", ")}
+                      <span className="text-muted-foreground italic truncate max-w-xs xl:max-w-md w-full sm:w-auto mt-2 sm:mt-0">
+                        Requires: {blockers.map((b: any) => b.name).join(", ")}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="hidden group-hover:flex gap-2">
+                <div className="flex sm:hidden group-hover:flex flex-wrap gap-2 w-full sm:w-auto">
                   <Button variant="ghost" size="sm" className="rounded-full font-bold text-amber-600 hover:text-amber-700 hover:bg-amber-50" onClick={() => delayTask(task.id)}>Delay 1 Week</Button>
                   <Button variant="ghost" size="sm" className="rounded-full">Edit</Button>
                   <Button variant="ghost" size="sm" className="rounded-full text-red-500 hover:text-red-600 hover:bg-red-50">Delete</Button>

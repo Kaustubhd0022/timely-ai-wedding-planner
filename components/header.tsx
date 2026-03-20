@@ -4,10 +4,10 @@ import { siteConfig } from "@/config/site";
 export function Header() {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container flex h-16 items-center justify-between px-4 sm:px-8">
         <div className="flex gap-6 md:gap-10">
           <Link href="/" className="flex items-center space-x-2">
-            <span className="inline-block font-bold font-serif text-2xl text-primary">
+            <span className="inline-block font-bold font-serif text-xl sm:text-2xl text-primary">
               {siteConfig.name}
             </span>
           </Link>
@@ -23,13 +23,13 @@ export function Header() {
             ))}
           </nav>
         </div>
-        <div className="flex items-center space-x-4">
-          <Link href="/login" className="text-sm font-medium hover:underline">
+        <div className="flex items-center space-x-2 sm:space-x-4">
+          <Link href="/login" className="text-xs sm:text-sm font-medium hover:underline">
             Login
           </Link>
           <Link
             href="/signup"
-            className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 transition-all"
+            className="rounded-full bg-primary px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white hover:opacity-90 transition-all"
           >
             Get Started
           </Link>

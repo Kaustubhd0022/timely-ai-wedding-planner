@@ -162,10 +162,10 @@ function DashboardContent() {
       </AnimatePresence>
 
       {/* 1. Warm Countdown Header */}
-      <header className="flex flex-col md:flex-row items-center justify-between gap-8 pt-4">
+      <header className="flex flex-col md:flex-row items-center justify-between gap-6 md:gap-8 pt-4">
         <div className="space-y-2 text-center md:text-left">
-          <h1 className="text-5xl font-serif text-stone-900 tracking-tight">You're doing great — stay on track.</h1>
-          <p className="text-muted-foreground text-xl font-medium flex items-center justify-center md:justify-start gap-2">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-stone-900 tracking-tight">You're doing great — stay on track.</h1>
+          <p className="text-muted-foreground text-lg md:text-xl font-medium flex items-center justify-center md:justify-start gap-2 text-center md:text-left">
             <span className="inline-block h-2 w-2 rounded-full bg-primary animate-pulse" />
             Only <span className="font-extrabold text-stone-900">{daysToWedding} days</span> until {wedding?.wedding_date ? new Date(wedding.wedding_date).toLocaleDateString(undefined, { dateStyle: 'long' }) : 'the big day'}.
           </p>
@@ -192,18 +192,18 @@ function DashboardContent() {
       </header>
       
       {/* 2. Sleek Progress Header */}
-      <section className="bg-white p-8 rounded-[2.5rem] border shadow-sm space-y-4">
-        <div className="flex justify-between items-center px-2">
+      <section className="bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-2 gap-4 sm:gap-0">
           <div className="space-y-1">
-            <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-stone-400">Current Progress</h3>
-            <p className="text-3xl font-serif text-stone-900">{progress}% complete</p>
+            <h3 className="text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-stone-400">Current Progress</h3>
+            <p className="text-2xl md:text-3xl font-serif text-stone-900">{progress}% complete</p>
           </div>
-          <div className="text-right">
-            <p className="text-stone-400 text-xs font-bold uppercase">{completedCount} / {totalTasks}</p>
-            <p className="text-stone-900 text-sm font-bold">Tasks Settled</p>
+          <div className="text-left sm:text-right">
+            <p className="text-stone-400 text-[10px] md:text-xs font-bold uppercase">{completedCount} / {totalTasks}</p>
+            <p className="text-stone-900 text-xs md:text-sm font-bold">Tasks Settled</p>
           </div>
         </div>
-        <div className="h-5 w-full bg-stone-50 rounded-full overflow-hidden p-1 shadow-inner border">
+        <div className="h-4 md:h-5 w-full bg-stone-50 rounded-full overflow-hidden p-1 shadow-inner border">
           <motion.div 
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
@@ -227,33 +227,33 @@ function DashboardContent() {
             transition={{ duration: 0.6 }}
           >
             <TiltCard>
-              <Card className="rounded-[2.5rem] border border-white/50 glass shadow-[0_8px_32px_rgba(0,0,0,0.04)] overflow-hidden relative group transition-all duration-700 hover:shadow-xl hover:-translate-y-1">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full -mr-32 -mt-32 blur-[100px] pointer-events-none" />
+              <Card className="rounded-[2rem] md:rounded-[2.5rem] border border-white/50 glass shadow-[0_8px_32px_rgba(0,0,0,0.04)] overflow-hidden relative group transition-all duration-700 hover:shadow-xl hover:-translate-y-1">
+                <div className="hidden md:block absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full -mr-32 -mt-32 blur-[100px] pointer-events-none" />
                 <div className="grid md:grid-cols-3">
-                  <div className="md:col-span-2 p-10 space-y-8 relative z-10">
+                  <div className="md:col-span-2 p-6 md:p-10 space-y-6 md:space-y-8 relative z-10 w-full overflow-hidden">
                     <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                          <span className="px-4 py-1.5 bg-primary/20 text-primary-foreground border border-primary/30 rounded-full text-xs font-black uppercase tracking-widest">Priority {nextAction.task.priority}</span>
-                          <span className="text-secondary text-sm font-bold uppercase tracking-widest">Recommended Focus</span>
+                      <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                          <span className="px-3 md:px-4 py-1.5 bg-primary/20 text-primary-foreground border border-primary/30 rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest shrink-0">Priority {nextAction.task.priority}</span>
+                          <span className="text-secondary text-xs md:text-sm font-bold uppercase tracking-widest shrink-0">Recommended Focus</span>
                       </div>
-                      <h3 className="text-5xl font-serif text-stone-900 leading-tight drop-shadow-sm">{nextAction.task.name}</h3>
-                      <p className="text-stone-500 leading-relaxed text-xl max-w-xl font-medium italic">
+                      <h3 className="text-3xl sm:text-4xl md:text-5xl font-serif text-stone-900 leading-tight drop-shadow-sm break-words">{nextAction.task.name}</h3>
+                      <p className="text-stone-500 leading-relaxed text-lg md:text-xl max-w-xl font-medium italic">
                         "{nextAction.reason}"
                       </p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-4">
-                      <div className="flex items-center gap-3 px-6 py-3 bg-white/60 rounded-full border border-white/40 text-stone-700 text-sm font-bold shadow-sm">
-                        <Clock size={18} className="text-primary" /> Target: {new Date(nextAction.task.deadline_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3 md:gap-4 w-full">
+                      <div className="w-full sm:w-auto flex items-center gap-3 px-6 py-3 bg-white/60 rounded-full border border-white/40 text-stone-700 text-xs md:text-sm font-bold shadow-sm">
+                        <Clock size={18} className="text-primary shrink-0" /> <span className="truncate">Target: {new Date(nextAction.task.deadline_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                       </div>
                       <Button 
                         onClick={() => window.location.href=`/app/tasks?wedding_id=${weddingId}`}
-                        className="rounded-full px-12 py-7 text-xl font-serif bg-primary text-primary-foreground hover:bg-[#d4b568] transition-all shadow-xl hover:shadow-2xl hover:scale-105"
+                        className="w-full sm:w-auto rounded-full px-8 py-6 md:px-12 md:py-7 text-lg md:text-xl font-serif bg-primary text-primary-foreground hover:bg-[#d4b568] transition-all shadow-xl hover:shadow-2xl md:hover:scale-105"
                       >
                         Take this step now
                       </Button>
                     </div>
                   </div>
-                  <div className="bg-white/40 backdrop-blur-md flex flex-col items-center justify-center p-10 border-l border-white/20 text-center space-y-4">
+                  <div className="bg-white/40 backdrop-blur-md flex flex-row md:flex-col items-center justify-start md:justify-center p-6 md:p-10 border-t md:border-t-0 md:border-l border-white/20 text-left md:text-center space-x-4 md:space-x-0 md:space-y-4">
                       <div className="h-24 w-24 bg-white/60 rounded-full flex items-center justify-center border border-white/40 shadow-sm transition-transform group-hover:rotate-12 group-hover:scale-110 duration-700">
                         <ShieldCheck size={48} className="text-secondary" />
                       </div>

@@ -88,12 +88,12 @@ function GuestsContent() {
 
   return (
     <div className="space-y-8">
-      <header className="flex justify-between items-end">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-0">
         <div>
-          <h1 className="text-4xl font-serif">Guest List</h1>
+          <h1 className="text-3xl md:text-4xl font-serif">Guest List</h1>
           <p className="text-muted-foreground mt-2">Manage RSVPs, groups, and special requests.</p>
         </div>
-        <Button className="rounded-full px-6 py-6 shadow-lg shadow-primary/20">
+        <Button className="w-full md:w-auto rounded-full px-6 py-4 md:py-6 shadow-lg shadow-primary/20">
           <UserPlus className="mr-2" size={18} /> Add Guest
         </Button>
       </header>
@@ -118,22 +118,22 @@ function GuestsContent() {
         </Card>
       </div>
 
-      <div className="flex flex-wrap gap-4 items-center bg-card p-4 rounded-2xl border shadow-sm">
-        <div className="flex-1 min-w-[300px] flex items-center gap-2 px-3 border rounded-xl bg-background">
-          <Search size={18} className="text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-center bg-card p-4 rounded-2xl border shadow-sm">
+        <div className="w-full flex-1 min-w-[300px] flex items-center gap-2 px-3 border rounded-xl bg-background">
+          <Search size={18} className="text-muted-foreground shrink-0" />
           <Input 
             placeholder="Search guests by name..." 
-            className="border-none shadow-none focus-visible:ring-0 px-0"
+            className="border-none shadow-none focus-visible:ring-0 px-0 w-full"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           {["All", ...groups].map((group) => (
             <button
               key={group}
               onClick={() => setActiveGroup(group)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex-grow sm:flex-grow-0 text-center ${
                 activeGroup === group 
                   ? "bg-primary text-white" 
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
