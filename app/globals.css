@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+:root {
+  --background: #FFF8F5; /* Ivory */
+  --foreground: #2d2a26; /* Deep Charcoal */
+  --primary: #E6C97A;    /* Soft Gold */
+  --primary-foreground: #1c1917;
+  --secondary: #A8C3A0;  /* Sage Green */
+  --secondary-foreground: #ffffff;
+  --accent: #F8C8DC;     /* Blush Pink */
+  --accent-foreground: #1c1917;
+  --muted: #f6efe9;
+  --muted-foreground: #8a7f76;
+  --card: rgba(255, 255, 255, 0.75);
+  --card-foreground: #2d2a26;
+  --border: rgba(230, 201, 122, 0.2);
+  --radius: 1.25rem;
+}
+
+@theme {
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "Inter", sans-serif;
+  
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.03);
+}
+
+.gold-gradient {
+  background: linear-gradient(135deg, #c4a484 0%, #e8dfd5 50%, #c4a484 100%);
+}
+
+.premium-card {
+  @apply rounded-3xl border border-solid bg-card p-6 shadow-sm transition-all hover:shadow-md;
+  border-color: var(--border);
+}
