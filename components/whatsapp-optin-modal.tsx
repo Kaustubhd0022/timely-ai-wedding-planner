@@ -1,140 +1,102 @@
+"use client";
+
 import { useState } from "react";
-import { Dialog, DialogPortal, DialogOverlay, DialogContent, DialogTitle, DialogDescription, DialogClose, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, MessageCircle, Bell, Clock, AlertTriangle } from "lucide-react";
+import { MessageSquare } from "lucide-react";
+import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 
-export function WhatsappOptInModal({ weddingId, currentOptIn, onUpdate }: { weddingId: string, currentOptIn?: boolean, onUpdate?: () => void }) {
-  const [open, setOpen] = useState(false);
+interface WhatsAppOptinModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  weddingId: string;
+}
+
+export function WhatsAppOptinModal({ isOpen, onClose, weddingId }: WhatsAppOptinModalProps) {
   const [phone, setPhone] = useState("");
-  const [preference, setPreference] = useState("Daily");
   const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
-    if (!phone) return;
+    if (!phone || phone.replace(/\D/g, "").length !== 10) {
+      alert("Please provide a valid 10-digit phone number.");
+      return;
+    }
+    
     setLoading(true);
     try {
-      await supabase.from("weddings").update({
-        whatsapp_number: phone,
+      const formattedPhone = `+91${phone.replace(/\D/g, "")}`;
+      const { error } = await supabase.from("weddings").update({
+        whatsapp_number: formattedPhone,
         whatsapp_opt_in: true,
-        notification_preference: preference,
       }).eq("id", weddingId);
-      setOpen(false);
-      if (onUpdate) onUpdate();
+      
+      if (error) throw error;
+      onClose();
     } catch (err) {
       console.error(err);
+      alert("Failed to enable WhatsApp updates.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (currentOptIn) {
-    return (
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-xs font-bold border border-green-200">
-        <MessageCircle size={14} /> WhatsApp Enabled
-      </div>
-    );
-  }
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={
-        <Button variant="outline" className="rounded-full shadow-sm bg-stone-900 text-white hover:bg-stone-800 border-none px-6">
-          <MessageCircle size={16} className="mr-2" /> Enable WhatsApp
-        </Button>
-      } />
-      <DialogPortal>
-        <DialogOverlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <DialogContent className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl space-y-6 relative overflow-y-auto max-h-[90vh]">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-2xl -mr-10 -mt-10" />
-            <DialogClose className="absolute top-6 right-6 text-muted-foreground hover:text-foreground">
-              <X size={20} />
-            </DialogClose>
-
-            <div className="space-y-2 text-center relative z-10">
-              <div className="h-16 w-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <MessageCircle size={32} className="text-green-600" />
-              </div>
-              <DialogTitle className="text-2xl font-serif text-stone-900">WhatsApp Assistant</DialogTitle>
-              <DialogDescription className="text-muted-foreground max-w-xs mx-auto">
-                Get smart reminders, weekly summaries, and alerts directly to your phone.
-              </DialogDescription>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[450px] p-0 rounded-[2.5rem] overflow-hidden border-none max-h-[90vh] flex flex-col focus:ring-0">
+        <div className="flex-1 overflow-y-auto pb-8 scrollbar-hide">
+          <div className="relative h-44 bg-gradient-to-br from-primary via-primary/90 to-primary/80 flex items-center justify-center overflow-hidden">
+            <motion.div 
+               animate={{ 
+                 scale: [1, 1.1, 1],
+                 rotate: [0, 5, -5, 0]
+               }}
+               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+               className="absolute inset-0 opacity-10"
+            >
+              <div className="w-full h-full border-[20px] border-white rounded-full opacity-20" />
+            </motion.div>
+            <div className="relative z-10 h-20 w-20 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center shadow-2xl border border-white/30">
+              <MessageSquare className="text-white fill-white" size={36} />
+            </div>
+          </div>
+          
+          <div className="p-8 space-y-6">
+            <div className="space-y-2 text-center">
+              <h1 className="text-3xl font-serif text-stone-900 tracking-tight">Stay Connected</h1>
+              <p className="text-stone-500 font-medium text-sm">Get daily wedding updates and smart reminders directly on WhatsApp.</p>
             </div>
 
-            <div className="space-y-4 relative z-10">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-stone-500">Phone Number</label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-4 rounded-l-xl border border-r-0 border-stone-200 bg-stone-50 text-stone-500 font-medium sm:text-sm">
-                    +91
-                  </span>
-                  <Input 
-                    type="tel"
-                    placeholder="10-digit mobile number" 
-                    className="rounded-l-none border-stone-200 focus-visible:ring-primary shadow-sm h-12"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                  />
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 pl-1">WhatsApp Number</label>
+                <div className="relative">
+                   <div className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm">+91</div>
+                   <Input 
+                     type="tel"
+                     placeholder="99999 00000" 
+                     className="rounded-2xl border-stone-200 h-12 bg-stone-50 pl-12 focus-visible:ring-primary shadow-sm" 
+                     value={phone}
+                     onChange={(e) => setPhone(e.target.value)}
+                   />
                 </div>
               </div>
-
-              <div className="space-y-2 pt-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-stone-500">Frequency</label>
-                <div className="grid grid-cols-1 gap-2">
-                  <button 
-                    onClick={() => setPreference("Daily")}
-                    className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${preference === "Daily" ? "border-green-500 bg-green-50/50" : "border-stone-200 hover:border-stone-300"}`}
-                  >
-                    <div className={`p-2 rounded-full ${preference === "Daily" ? "bg-green-100 text-green-600" : "bg-stone-100 text-stone-500"}`}>
-                      <Bell size={16} />
-                    </div>
-                    <div>
-                      <p className={`text-sm font-bold ${preference === "Daily" ? "text-green-900" : "text-stone-700"}`}>Daily Updates</p>
-                      <p className="text-xs text-stone-500">Daily "Next Best Action" at 9 AM.</p>
-                    </div>
-                  </button>
-
-                  <button 
-                    onClick={() => setPreference("Weekly")}
-                    className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${preference === "Weekly" ? "border-green-500 bg-green-50/50" : "border-stone-200 hover:border-stone-300"}`}
-                  >
-                    <div className={`p-2 rounded-full ${preference === "Weekly" ? "bg-green-100 text-green-600" : "bg-stone-100 text-stone-500"}`}>
-                      <Clock size={16} />
-                    </div>
-                    <div>
-                      <p className={`text-sm font-bold ${preference === "Weekly" ? "text-green-900" : "text-stone-700"}`}>Weekly Summary</p>
-                      <p className="text-xs text-stone-500">Every Monday overview of the week.</p>
-                    </div>
-                  </button>
-
-                  <button 
-                    onClick={() => setPreference("Alerts")}
-                    className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${preference === "Alerts" ? "border-green-500 bg-green-50/50" : "border-stone-200 hover:border-stone-300"}`}
-                  >
-                    <div className={`p-2 rounded-full ${preference === "Alerts" ? "bg-green-100 text-green-600" : "bg-stone-100 text-stone-500"}`}>
-                      <AlertTriangle size={16} />
-                    </div>
-                    <div>
-                      <p className={`text-sm font-bold ${preference === "Alerts" ? "text-green-900" : "text-stone-700"}`}>Important Alerts Only</p>
-                      <p className="text-xs text-stone-500">Only when tasks are overdue or blocked.</p>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <Button onClick={handleSave} disabled={loading || !phone} className="w-full rounded-xl h-12 text-md font-bold shadow-lg shadow-primary/20">
-                {loading ? "Saving..." : "Confirm & Enable"}
+              <Button 
+                onClick={handleSave}
+                disabled={loading || !phone}
+                className="w-full h-14 rounded-2xl bg-stone-900 hover:bg-black text-white text-lg font-serif shadow-xl shadow-stone-900/10 transition-all active:scale-[0.98]"
+              >
+                {loading ? "Enabling..." : "Opt-in & Save"}
               </Button>
-              <p className="text-[10px] text-center text-stone-400 mt-4 uppercase tracking-widest font-black">
-                We respect your privacy. No spam.
-              </p>
             </div>
-          </DialogContent>
-        </DialogOverlay>
-      </DialogPortal>
+
+            <p className="text-[10px] text-center text-stone-400 font-bold uppercase tracking-widest leading-relaxed">
+              * We only send 1 daily digest. <br />You can opt-out anytime by typing "STOP".
+            </p>
+          </div>
+        </div>
+      </DialogContent>
     </Dialog>
   );
 }

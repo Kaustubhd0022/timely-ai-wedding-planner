@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getNextBestAction, getSmartAlerts, isTaskBlocked } from "@/lib/orchestrator";
-import { WhatsappOptInModal } from "@/components/whatsapp-optin-modal";
+import { WhatsAppOptinModal } from "@/components/whatsapp-optin-modal";
 import { MessageCircle } from "lucide-react";
 import { TiltCard } from "@/components/tilt-card";
 
@@ -126,9 +126,20 @@ function DashboardContent() {
   const nextAction = getNextBestAction(tasks, dependencies);
   const alerts = getSmartAlerts(tasks, dependencies);
 
+  const [isOptinOpen, setIsOptinOpen] = useState(false);
+
   const daysToWedding = wedding?.wedding_date 
-    ? Math.floor((new Date(wedding.wedding_date).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24))
+    ? Math.ceil((new Date(wedding.wedding_date).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24))
     : 0;
+
+  const weddingStatus = () => {
+    if (!wedding?.wedding_date) return "The big day is coming!";
+    const today = new Date().setHours(0,0,0,0);
+    const wDay = new Date(wedding.wedding_date).setHours(0,0,0,0);
+    if (today === wDay) return "Today is your big day 🎉";
+    if (today > wDay) return "Wedding completed";
+    return `Only ${daysToWedding} days until the big day`;
+  };
 
   // Filter Top 3 Tasks: High priority, soonest deadlines, not done
   const topTasks = tasks
@@ -270,16 +281,22 @@ function DashboardContent() {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-stone-900 tracking-tight">You're doing great — stay on track.</h1>
           <p className="text-muted-foreground text-lg md:text-xl font-medium flex items-center justify-center md:justify-start gap-2 text-center md:text-left">
             <span className="inline-block h-2 w-2 rounded-full bg-primary animate-pulse" />
-            Only <span className="font-extrabold text-stone-900">{daysToWedding} days</span> until {wedding?.wedding_date ? (
-              <span className="relative group cursor-pointer border-b border-dotted border-primary">
-                {new Date(wedding.wedding_date).toLocaleDateString(undefined, { dateStyle: 'long' })}
-                <input 
-                  type="date" 
-                  className="absolute inset-0 opacity-0 cursor-pointer" 
-                  onChange={(e) => handleUpdateDate(e.target.value)}
-                />
-              </span>
-            ) : 'the big day'}.
+            {weddingStatus() === "Only " + daysToWedding + " days until the big day" ? (
+              <>
+                Only <span className="font-extrabold text-stone-900">{daysToWedding} days</span> until {wedding?.wedding_date ? (
+                  <span className="relative group cursor-pointer border-b border-dotted border-primary">
+                    {new Date(wedding.wedding_date).toLocaleDateString(undefined, { dateStyle: 'long' })}
+                    <input 
+                      type="date" 
+                      className="absolute inset-0 opacity-0 cursor-pointer" 
+                      onChange={(e) => handleUpdateDate(e.target.value)}
+                    />
+                  </span>
+                ) : 'the big day'}.
+              </>
+            ) : (
+              <span className="font-extrabold text-stone-900">{weddingStatus()}</span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-3 bg-white/50 p-2 rounded-full border shadow-sm">
@@ -295,10 +312,10 @@ function DashboardContent() {
               {simulating ? "Generating..." : "Simulate Daily Msg"}
             </Button>
           )}
-          <WhatsappOptInModal 
-            weddingId={weddingId} 
-            currentOptIn={wedding?.whatsapp_opt_in} 
-            onUpdate={() => fetchData(weddingId)} 
+          <WhatsAppOptinModal 
+            isOpen={isOptinOpen} 
+            onClose={() => setIsOptinOpen(false)} 
+            weddingId={weddingId || ""} 
           />
         </div>
       </header>

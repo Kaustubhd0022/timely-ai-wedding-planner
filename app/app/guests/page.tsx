@@ -93,13 +93,44 @@ function GuestsContent() {
 
   const handleSaveGuest = async () => {
     if (!weddingId) return;
+    
+    // Validation
+    if (!formData.first_name.trim()) {
+      alert("First name is required.");
+      return;
+    }
+
+    const phoneClean = formData.phone.replace(/\D/g, "");
+    if (!phoneClean || phoneClean.length !== 10) {
+      alert("Please provide a valid 10-digit phone number.");
+      return;
+    }
+    const formattedPhone = `+91${phoneClean}`;
+
     setIsSaving(true);
     try {
       if (editingGuest) {
-        const { error } = await supabase.from("guests").update(formData).eq("id", editingGuest.id);
+        const { error } = await supabase.from("guests").update({
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          phone: formattedPhone,
+          group_tag: formData.group_tag,
+          role: formData.role,
+          rsvp_status: formData.rsvp_status,
+          email: formData.email
+        }).eq("id", editingGuest.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("guests").insert({ ...formData, wedding_id: weddingId });
+        const { error } = await supabase.from("guests").insert({
+          wedding_id: weddingId,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          phone: formattedPhone,
+          group_tag: formData.group_tag,
+          role: formData.role,
+          rsvp_status: formData.rsvp_status,
+          email: formData.email
+        });
         if (error) throw error;
       }
       await fetchGuests(weddingId);

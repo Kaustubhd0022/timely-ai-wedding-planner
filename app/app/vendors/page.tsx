@@ -19,10 +19,9 @@ const USER_LOCATION = { lat: 40.7128, lng: -74.0060 };
 export default function VendorsPage() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const [vendors, setVendors] = useState<(Vendor & { distance: number; score: number })[]>([]);
+  const [vendors, setVendors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userCity, setUserCity] = useState("Mumbai");
-  const [coords, setCoords] = useState({ lat: 19.0760, lng: 72.8777 }); // Default Mumbai
   const [isChangingLocation, setIsChangingLocation] = useState(false);
   const [newCityInput, setNewCityInput] = useState("");
 
@@ -36,49 +35,41 @@ export default function VendorsPage() {
   }, []);
 
   useEffect(() => {
-    if (coords) {
-      const results = getRecommendedVendors(coords, activeCategory);
-      setVendors(results);
+    if (userCity) {
+      fetchLiveVendors(userCity, activeCategory);
     }
-  }, [coords, activeCategory]);
+  }, [userCity, activeCategory]);
 
   async function fetchWeddingCity(id: string) {
-    setLoading(true);
     try {
       const { data } = await supabase.from("weddings").select("user_city").eq("id", id).single();
       if (data?.user_city) {
         setUserCity(data.user_city);
-        await geocodeCity(data.user_city);
-      } else {
-        // Fallback to Mumbai if no city set
-        await geocodeCity("Mumbai");
       }
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   }
 
-  async function geocodeCity(city: string) {
-    // Check cache first
-    const cached = localStorage.getItem(`geo_${city.toLowerCase()}`);
-    if (cached) {
-      const parsed = JSON.parse(cached);
-      setCoords(parsed);
-      return;
-    }
-
+  async function fetchLiveVendors(city: string, category: string) {
+    setLoading(true);
     try {
-      const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`);
+      const resp = await fetch("/api/vendors/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ city, category })
+      });
       const data = await resp.json();
-      if (data && data[0]) {
-        const newCoords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-        setCoords(newCoords);
-        localStorage.setItem(`geo_${city.toLowerCase()}`, JSON.stringify(newCoords));
+      if (Array.isArray(data)) {
+        setVendors(data);
+      } else {
+        setVendors([]);
       }
     } catch (err) {
-      console.error("Geocoding error:", err);
+      console.error("Vendor search error:", err);
+      setVendors([]);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -93,12 +84,10 @@ export default function VendorsPage() {
       if (error) throw error;
       
       setUserCity(newCityInput);
-      await geocodeCity(newCityInput);
       setIsChangingLocation(false);
     } catch (err) {
       console.error(err);
       alert("Failed to update location");
-    } finally {
       setLoading(false);
     }
   }
