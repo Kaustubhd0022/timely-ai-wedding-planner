@@ -14,12 +14,13 @@ import {
   ShieldCheck, 
   Wallet, 
   AlertCircle, 
-  Lock 
+  Lock,
+  Activity,
+  MessageCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getNextBestAction, getSmartAlerts, isTaskBlocked } from "@/lib/orchestrator";
 import { WhatsAppOptinModal } from "@/components/whatsapp-optin-modal";
-import { MessageCircle } from "lucide-react";
 import { TiltCard } from "@/components/tilt-card";
 
 function DashboardContent() {
