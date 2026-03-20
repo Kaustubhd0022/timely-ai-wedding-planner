@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
 const STAGES = [
+  { id: "couple", title: "The Couple", description: "Who are we celebrating?" },
+  { id: "city", title: "The City", description: "Where is the magic happening?" },
   { id: "date", title: "The Big Day", description: "When is the celebration?" },
   { id: "events", title: "The Festivities", description: "Which events are we planning?" },
   { id: "guests", title: "The Guests", description: "How many loved ones are joining?" },
@@ -28,6 +30,11 @@ export default function OnboardingPage() {
   const [stageIndex, setStageIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    groom_name: "",
+    bride_name: "",
+    groom_whatsapp: "",
+    bride_whatsapp: "",
+    user_city: "",
     wedding_date: "",
     events_selected: [] as string[],
     guest_count: 100,
@@ -99,6 +106,69 @@ export default function OnboardingPage() {
 
           <div className="flex-1">
             {stageIndex === 0 && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-stone-500">Groom's Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Advait"
+                      className="w-full p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary outline-none"
+                      value={formData.groom_name}
+                      onChange={(e) => setFormData({ ...formData, groom_name: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-stone-500">Bride's Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Isha"
+                      className="w-full p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary outline-none"
+                      value={formData.bride_name}
+                      onChange={(e) => setFormData({ ...formData, bride_name: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-stone-500">Groom's WhatsApp</label>
+                    <input 
+                      type="tel" 
+                      placeholder="+91..."
+                      className="w-full p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary outline-none"
+                      value={formData.groom_whatsapp}
+                      onChange={(e) => setFormData({ ...formData, groom_whatsapp: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-widest text-stone-500">Bride's WhatsApp</label>
+                    <input 
+                      type="tel" 
+                      placeholder="+91..."
+                      className="w-full p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary outline-none"
+                      value={formData.bride_whatsapp}
+                      onChange={(e) => setFormData({ ...formData, bride_whatsapp: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {stageIndex === 1 && (
+              <div className="space-y-4">
+                <label className="text-xs font-bold uppercase tracking-widest text-stone-500">Wedding City</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Mumbai, Delhi, Bengaluru" 
+                  className="w-full p-4 rounded-xl border border-border bg-background text-lg focus:ring-2 focus:ring-primary outline-none"
+                  value={formData.user_city}
+                  onChange={(e) => setFormData({ ...formData, user_city: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground italic">We'll use this to recommend the best local vendors within 100km.</p>
+              </div>
+            )}
+
+            {stageIndex === 2 && (
               <input 
                 type="date" 
                 className="w-full p-4 rounded-xl border border-border bg-background text-lg focus:ring-2 focus:ring-primary outline-none"
@@ -107,7 +177,7 @@ export default function OnboardingPage() {
               />
             )}
 
-            {stageIndex === 1 && (
+            {stageIndex === 3 && (
               <div className="grid grid-cols-2 gap-3">
                 {EVENT_TYPES.map((e) => (
                   <button
@@ -130,7 +200,7 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {stageIndex === 2 && (
+            {stageIndex === 4 && (
               <div className="space-y-6">
                 <div className="text-center py-8">
                   <span className="text-6xl font-serif text-primary">{formData.guest_count}</span>
@@ -148,10 +218,10 @@ export default function OnboardingPage() {
               </div>
             )}
 
-            {stageIndex === 3 && (
+            {stageIndex === 5 && (
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2Caps uppercase tracking-wider">Cultural Context</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-2 uppercase tracking-wider">Cultural Context</label>
                   <select 
                     className="w-full p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary outline-none"
                     value={formData.cultural_context}
@@ -192,7 +262,7 @@ export default function OnboardingPage() {
             </button>
             <button 
               onClick={nextStage}
-              disabled={loading || (stageIndex === 0 && !formData.wedding_date)}
+              disabled={loading || (stageIndex === 2 && !formData.wedding_date) || (stageIndex === 0 && (!formData.groom_name || !formData.bride_name))}
               className="flex-1 px-8 py-3 rounded-full bg-primary text-white font-semibold hover:opacity-90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
             >
               {loading ? "Generating..." : (stageIndex === STAGES.length - 1 ? "Generate My Timeline" : "Continue")}

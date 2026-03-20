@@ -46,7 +46,7 @@ export function WhatsappOptInModal({ weddingId, currentOptIn, onUpdate }: { wedd
       } />
       <DialogPortal>
         <DialogOverlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <DialogContent className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl space-y-6 relative overflow-hidden">
+          <DialogContent className="bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl space-y-6 relative overflow-y-auto max-h-[90vh]">
             <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-2xl -mr-10 -mt-10" />
             <DialogClose className="absolute top-6 right-6 text-muted-foreground hover:text-foreground">
               <X size={20} />

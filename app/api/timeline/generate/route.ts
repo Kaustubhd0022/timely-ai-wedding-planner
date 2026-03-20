@@ -10,7 +10,18 @@ const groq = new Groq({
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { wedding_date, guest_count, budget_range, cultural_context, events_selected } = body;
+    const { 
+      wedding_date, 
+      guest_count, 
+      budget_range, 
+      cultural_context, 
+      events_selected,
+      groom_name,
+      bride_name,
+      groom_whatsapp,
+      bride_whatsapp,
+      user_city
+    } = body;
 
     // 1. Generate Content with AI (Groq)
     const prompt = `
@@ -64,6 +75,11 @@ export async function POST(req: Request) {
         budget_range,
         cultural_context,
         events_selected,
+        groom_name,
+        bride_name,
+        groom_whatsapp,
+        bride_whatsapp,
+        user_city,
         total_budget: totalBudget,
         session_token: crypto.randomUUID(), 
       })

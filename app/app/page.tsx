@@ -33,6 +33,9 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [mockMessage, setMockMessage] = useState<string | null>(null);
   const [simulating, setSimulating] = useState(false);
+  const [bookings, setBookings] = useState<any[]>([]);
+  const [dailyPlans, setDailyPlans] = useState<Record<string, string>>({});
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
   const simulateWhatsApp = async () => {
     setSimulating(true);
@@ -93,11 +96,22 @@ function DashboardContent() {
         .select("*")
         .eq("wedding_id", id);
 
+      const { data: bookingsData } = await supabase
+        .from("bookings")
+        .select("*")
+        .eq("wedding_id", id)
+        .order("event_date", { ascending: true });
+
       setWedding(weddingData);
       setTasks(tasksData || []);
       setDependencies(depsData || []);
       setBudgets(budgetsData || []);
       setGuests(guestsData || []);
+      setBookings(bookingsData || []);
+      
+      if (tasksData && tasksData.length > 0) {
+        generateDailyAIPlans(tasksData);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -113,8 +127,97 @@ function DashboardContent() {
   const alerts = getSmartAlerts(tasks, dependencies);
 
   const daysToWedding = wedding?.wedding_date 
-    ? Math.ceil((new Date(wedding.wedding_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+    ? Math.floor((new Date(wedding.wedding_date).setHours(0,0,0,0) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24))
     : 0;
+
+  // Filter Top 3 Tasks: High priority, soonest deadlines, not done
+  const topTasks = tasks
+    .filter(t => t.status !== "Done")
+    .sort((a, b) => {
+      // Sort by priority (1 is highest) then by date
+      if (a.priority !== b.priority) return a.priority - b.priority;
+      return new Date(a.deadline_date).getTime() - new Date(b.deadline_date).getTime();
+    })
+    .slice(0, 3);
+
+  async function generateDailyAIPlans(allTasks: any[]) {
+    const currentTop = allTasks
+      .filter(t => t.status !== "Done")
+      .sort((a, b) => {
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        return new Date(a.deadline_date).getTime() - new Date(b.deadline_date).getTime();
+      })
+      .slice(0, 3);
+
+    if (currentTop.length === 0) return;
+    
+    setIsAiLoading(true);
+    try {
+      const res = await fetch("/api/ai/daily-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tasks: currentTop })
+      });
+      const data = await res.json();
+      const planMap: Record<string, string> = {};
+      data.plans?.forEach((p: any) => {
+        planMap[p.task_id] = p.explanation;
+      });
+      setDailyPlans(planMap);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAiLoading(false);
+    }
+  }
+
+  async function handleToggleTask(taskId: string, currentStatus: string) {
+    const newStatus = currentStatus === "Done" ? "To Do" : "Done";
+    try {
+      const { error } = await supabase.from("tasks").update({ status: newStatus }).eq("id", taskId);
+      if (error) throw error;
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function handleUpdateDate(newDate: string) {
+    if (!weddingId || !wedding?.wedding_date) return;
+    const oldDate = new Date(wedding.wedding_date);
+    const updatedDate = new Date(newDate);
+    const diffTime = updatedDate.getTime() - oldDate.getTime();
+    const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+    setLoading(true);
+    try {
+      // 1. Update wedding date
+      const { error: wError } = await supabase.from("weddings").update({ wedding_date: newDate }).eq("id", weddingId);
+      if (wError) throw wError;
+
+      // 2. Shift all task deadlines
+      const updatedTasks = tasks.map(t => {
+        const d = new Date(t.deadline_date);
+        d.setDate(d.getDate() + diffDays);
+        return {
+          ...t,
+          deadline_date: d.toISOString().split('T')[0]
+        };
+      });
+
+      // Batch update tasks (sequential for simplicity here, or just refetch)
+      for (const t of updatedTasks) {
+        await supabase.from("tasks").update({ deadline_date: t.deadline_date }).eq("id", t.id);
+      }
+
+      await fetchData(weddingId);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update date");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   if (loading) {
     return <div className="animate-pulse space-y-8 p-8">
@@ -167,7 +270,16 @@ function DashboardContent() {
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif text-stone-900 tracking-tight">You're doing great — stay on track.</h1>
           <p className="text-muted-foreground text-lg md:text-xl font-medium flex items-center justify-center md:justify-start gap-2 text-center md:text-left">
             <span className="inline-block h-2 w-2 rounded-full bg-primary animate-pulse" />
-            Only <span className="font-extrabold text-stone-900">{daysToWedding} days</span> until {wedding?.wedding_date ? new Date(wedding.wedding_date).toLocaleDateString(undefined, { dateStyle: 'long' }) : 'the big day'}.
+            Only <span className="font-extrabold text-stone-900">{daysToWedding} days</span> until {wedding?.wedding_date ? (
+              <span className="relative group cursor-pointer border-b border-dotted border-primary">
+                {new Date(wedding.wedding_date).toLocaleDateString(undefined, { dateStyle: 'long' })}
+                <input 
+                  type="date" 
+                  className="absolute inset-0 opacity-0 cursor-pointer" 
+                  onChange={(e) => handleUpdateDate(e.target.value)}
+                />
+              </span>
+            ) : 'the big day'}.
           </p>
         </div>
         <div className="flex items-center gap-3 bg-white/50 p-2 rounded-full border shadow-sm">
@@ -191,25 +303,76 @@ function DashboardContent() {
         </div>
       </header>
       
-      {/* 2. Sleek Progress Header */}
-      <section className="bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-2 gap-4 sm:gap-0">
-          <div className="space-y-1">
-            <h3 className="text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-stone-400">Current Progress</h3>
-            <p className="text-2xl md:text-3xl font-serif text-stone-900">{progress}% complete</p>
+      {/* 2. AI Daily Planner Section */}
+      <section className="grid md:grid-cols-2 gap-8 items-start">
+        <div className="space-y-6">
+          <div className="flex items-center gap-2 px-2">
+             <div className="h-1 w-8 bg-primary rounded-full" />
+             <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-stone-400 font-black">Today's Top 3 Tasks</h2>
           </div>
-          <div className="text-left sm:text-right">
-            <p className="text-stone-400 text-[10px] md:text-xs font-bold uppercase">{completedCount} / {totalTasks}</p>
-            <p className="text-stone-900 text-xs md:text-sm font-bold">Tasks Settled</p>
+          
+          <div className="space-y-4">
+            {topTasks.length > 0 ? (
+              topTasks.map((task, idx) => (
+                <motion.div 
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  key={task.id} 
+                  className="premium-card !p-5 flex items-start gap-4 hover:border-primary/20 bg-white"
+                >
+                  <button 
+                    onClick={() => handleToggleTask(task.id, task.status)}
+                    className="mt-1 h-6 w-6 rounded-full border-2 border-primary/20 flex items-center justify-center hover:bg-primary/10 transition-colors shrink-0"
+                  >
+                    {task.status === "Done" && <CheckCircle2 size={14} className="text-primary fill-primary/10" />}
+                  </button>
+                  <div className="flex-1 space-y-1">
+                    <h4 className="font-serif text-lg text-stone-900 leading-tight">{task.name}</h4>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[9px] font-black uppercase text-stone-400 bg-stone-50 px-1.5 py-0.5 rounded border border-stone-100 flex items-center gap-1">
+                        <Clock size={8} /> {new Date(task.deadline_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </span>
+                      <span className="text-[9px] font-black uppercase text-primary bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">Priority {task.priority}</span>
+                    </div>
+                    {isAiLoading ? (
+                      <div className="h-3 w-3/4 bg-muted animate-pulse rounded mt-2" />
+                    ) : dailyPlans[task.id] && (
+                      <p className="text-xs text-stone-500 font-medium italic border-l-2 border-primary/20 pl-3 py-1">
+                        “{dailyPlans[task.id]}”
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              ))
+            ) : (
+              <div className="p-8 text-center bg-stone-50 rounded-[2rem] border-2 border-dashed border-stone-200">
+                <Trophy className="mx-auto mb-2 text-green-500" size={32} />
+                <p className="text-sm font-serif text-stone-800">Everything settled for today!</p>
+              </div>
+            )}
           </div>
         </div>
-        <div className="h-4 md:h-5 w-full bg-stone-50 rounded-full overflow-hidden p-1 shadow-inner border">
-          <motion.div 
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-            className="h-full bg-primary rounded-full shadow-lg shadow-primary/20"
-          />
+
+        <div className="bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border shadow-sm space-y-4 h-full">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-2 gap-4 sm:gap-0">
+            <div className="space-y-1">
+              <h3 className="text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-stone-400">Current Progress</h3>
+              <p className="text-2xl md:text-3xl font-serif text-stone-900">{progress}% complete</p>
+            </div>
+            <div className="text-left sm:text-right">
+              <p className="text-stone-400 text-[10px] md:text-xs font-bold uppercase">{completedCount} / {totalTasks}</p>
+              <p className="text-stone-900 text-xs md:text-sm font-bold">Tasks Settled</p>
+            </div>
+          </div>
+          <div className="h-4 md:h-5 w-full bg-stone-50 rounded-full overflow-hidden p-1 shadow-inner border">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+              className="h-full bg-primary rounded-full shadow-lg shadow-primary/20"
+            />
+          </div>
         </div>
       </section>
 
@@ -326,6 +489,40 @@ function DashboardContent() {
                  <p className="text-sm text-stone-400 font-bold uppercase tracking-widest">Plan is healthy</p>
               </div>
             )}
+            
+            <div className="space-y-4 pt-4">
+              <div className="flex items-center gap-2 px-2">
+                 <div className="h-1 w-4 bg-stone-300 rounded-full" />
+                 <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-stone-400">Upcoming Bookings</h2>
+              </div>
+              {bookings.length > 0 ? (
+                bookings.map((booking, idx) => (
+                  <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    key={booking.id}
+                    className="p-4 bg-white rounded-3xl border border-stone-100 shadow-sm space-y-2 group"
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-primary">{booking.event_type}</span>
+                      <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                        booking.status === 'confirmed' ? 'bg-green-50 text-green-600 border border-green-100' :
+                        'bg-amber-50 text-amber-600 border border-amber-100'
+                      }`}>
+                        {booking.status}
+                      </span>
+                    </div>
+                    <h5 className="font-serif text-stone-900 group-hover:text-primary transition-colors">{booking.vendor_name}</h5>
+                    <div className="flex items-center gap-2 text-[10px] text-stone-400 font-bold">
+                       <Clock size={10} /> {new Date(booking.event_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <p className="text-center py-8 text-[10px] text-stone-400 font-bold uppercase tracking-widest italic">No bookings yet</p>
+              )}
+            </div>
             
             <TiltCard>
               <Card className="rounded-[2.5rem] glass border border-white/50 p-8 shadow-sm mt-12 overflow-hidden relative group transition-all duration-700 hover:shadow-xl hover:-translate-y-1">

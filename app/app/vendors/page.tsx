@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { getRecommendedVendors, Vendor } from "@/lib/vendors";
 import { VendorCard } from "@/components/vendor-card";
+import { supabase } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
 
 const VENDOR_CATEGORIES = [
   "All", "Venue", "Catering", "Photographer", "Decorator", "Makeup Artist"
@@ -19,17 +21,87 @@ export default function VendorsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [vendors, setVendors] = useState<(Vendor & { distance: number; score: number })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userCity, setUserCity] = useState("Mumbai");
+  const [coords, setCoords] = useState({ lat: 19.0760, lng: 72.8777 }); // Default Mumbai
+  const [isChangingLocation, setIsChangingLocation] = useState(false);
+  const [newCityInput, setNewCityInput] = useState("");
 
   useEffect(() => {
-    // In a real app we'd get location from browser: navigator.geolocation.getCurrentPosition
-    // For now, we simulate fetching ranked vendors
-    setLoading(true);
-    setTimeout(() => {
-      const results = getRecommendedVendors(USER_LOCATION, activeCategory);
-      setVendors(results);
+    const weddingId = localStorage.getItem("wedding_id");
+    if (weddingId) {
+      fetchWeddingCity(weddingId);
+    } else {
       setLoading(false);
-    }, 400); // simulate network delay
-  }, [activeCategory]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (coords) {
+      const results = getRecommendedVendors(coords, activeCategory);
+      setVendors(results);
+    }
+  }, [coords, activeCategory]);
+
+  async function fetchWeddingCity(id: string) {
+    setLoading(true);
+    try {
+      const { data } = await supabase.from("weddings").select("user_city").eq("id", id).single();
+      if (data?.user_city) {
+        setUserCity(data.user_city);
+        await geocodeCity(data.user_city);
+      } else {
+        // Fallback to Mumbai if no city set
+        await geocodeCity("Mumbai");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function geocodeCity(city: string) {
+    // Check cache first
+    const cached = localStorage.getItem(`geo_${city.toLowerCase()}`);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      setCoords(parsed);
+      return;
+    }
+
+    try {
+      const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`);
+      const data = await resp.json();
+      if (data && data[0]) {
+        const newCoords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        setCoords(newCoords);
+        localStorage.setItem(`geo_${city.toLowerCase()}`, JSON.stringify(newCoords));
+      }
+    } catch (err) {
+      console.error("Geocoding error:", err);
+    }
+  }
+
+  async function handleUpdateLocation() {
+    if (!newCityInput.trim()) return;
+    const weddingId = localStorage.getItem("wedding_id");
+    if (!weddingId) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.from("weddings").update({ user_city: newCityInput }).eq("id", weddingId);
+      if (error) throw error;
+      
+      setUserCity(newCityInput);
+      await geocodeCity(newCityInput);
+      setIsChangingLocation(false);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update location");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const filteredVendors = vendors.filter(v => 
     v.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -48,12 +120,32 @@ export default function VendorsPage() {
           </div>
           <h1 className="text-4xl md:text-5xl font-serif text-stone-900 leading-tight">Curated Local Experts</h1>
           <p className="text-muted-foreground text-lg mt-2 max-w-lg">
-            We've found the highest-rated vendors within 100km, ranked specifically for your profile.
+            We've found the highest-rated vendors within 100km of {userCity}, ranked specifically for your profile.
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm text-sm font-bold text-stone-600 border border-stone-100">
-          <MapPin size={16} className="text-primary" /> New York City
-        </div>
+        
+        {isChangingLocation ? (
+          <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-full shadow-sm border border-primary/30">
+            <Input 
+              value={newCityInput}
+              onChange={e => setNewCityInput(e.target.value)}
+              placeholder="Enter city..."
+              className="border-none shadow-none h-8 w-32 px-2 text-sm focus-visible:ring-0"
+              autoFocus
+            />
+            <Button size="sm" variant="ghost" className="h-8 rounded-full text-xs font-bold text-primary" onClick={handleUpdateLocation}>Save</Button>
+            <Button size="sm" variant="ghost" className="h-8 rounded-full text-xs font-bold text-muted-foreground" onClick={() => setIsChangingLocation(false)}>Cancel</Button>
+          </div>
+        ) : (
+          <div 
+            onClick={() => { setNewCityInput(userCity); setIsChangingLocation(true); }}
+            className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-full shadow-sm text-sm font-bold text-stone-600 border border-stone-100 cursor-pointer hover:border-primary/30 transition-all group"
+          >
+            <MapPin size={16} className="text-primary group-hover:scale-110 transition-transform" /> 
+            {userCity}
+            <span className="text-[10px] uppercase text-primary ml-1 font-black opacity-0 group-hover:opacity-100 transition-opacity">Change</span>
+          </div>
+        )}
       </header>
 
       <div className="flex flex-col gap-6">
@@ -89,8 +181,8 @@ export default function VendorsPage() {
           ))
         ) : filteredVendors.length === 0 ? (
           <div className="col-span-full py-24 text-center bg-stone-50 rounded-[3rem] border-2 border-dashed border-stone-200 text-muted-foreground">
-            <h3 className="text-2xl font-serif text-stone-800 mb-2">No recommendations found</h3>
-            <p className="text-lg">Try widening your search or changing the category.</p>
+            <h3 className="text-2xl font-serif text-stone-800 mb-2">No recommendations found within 100km</h3>
+            <p className="text-lg">Try widening your search or changing to a major city like Mumbai or Delhi.</p>
           </div>
         ) : (
           filteredVendors.map(vendor => (
@@ -101,3 +193,4 @@ export default function VendorsPage() {
     </div>
   );
 }
+
