@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getWeddingContext, generateWhatsAppMessage, sendWhatsAppMessage } from "@/lib/whatsapp";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
+  console.log("API triggered: /api/whatsapp/trigger");
   try {
     const { searchParams } = new URL(request.url);
     const wedding_id = searchParams.get("wedding_id");

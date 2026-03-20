@@ -7,8 +7,17 @@ const groq = new Groq({
   apiKey: env.GROQ_API_KEY,
 });
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
+  console.log("API triggered: /api/timeline/generate");
   try {
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json({ 
+        success: false, 
+        error: "AI is not configured. GROQ_API_KEY is missing." 
+      }, { status: 500 });
+    }
     const body = await req.json();
     const { 
       wedding_date, 

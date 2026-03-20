@@ -6,8 +6,19 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
+  console.log("API triggered: /api/saathi");
   try {
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json({
+        reply: "AI is not configured. Please add GROQ_API_KEY to your environment.",
+        action: null,
+        data: {}
+      });
+    }
+
     const { message, history, weddingId } = await request.json();
 
     if (!weddingId) {

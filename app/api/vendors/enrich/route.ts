@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
 
 export const runtime = "edge";
+export const dynamic = "force-dynamic";
 
 interface EnrichRequest {
   vendor: {
@@ -21,7 +22,17 @@ interface EnrichRequest {
 const enrichmentCache = new Map<string, any>();
 
 export async function POST(req: Request) {
+  console.log("API triggered: /api/vendors/enrich");
   try {
+    if (!process.env.GROQ_API_KEY) {
+      console.warn("[ENRICH] Missing GROQ_API_KEY. Using fallback.");
+      return NextResponse.json({
+        description: "Premium wedding services tailored to your specialized needs.",
+        why_choose: "Highly rated by couples for exceptional reliability and quality.",
+        tagline: "Your Vision. Brought to Life.",
+        fallback: true
+      });
+    }
     const body: EnrichRequest = await req.json();
     const { vendor } = body;
 

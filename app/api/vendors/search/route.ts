@@ -50,7 +50,10 @@ const DEFAULT_VENDORS = [
   }
 ];
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
+  console.log("API triggered: /api/vendors/search");
   try {
     const { city, category } = await req.json();
     console.log(`[VENDOR SEARCH] City: ${city}, Category: ${category}`);
@@ -59,8 +62,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "City and Category are required" }, { status: 400 });
     }
 
-    if (!GOOGLE_KEY) {
-      console.warn("[VENDOR SEARCH] Google Maps API key is missing. Using default vendors.");
+    if (!GOOGLE_KEY || !process.env.GROQ_API_KEY) {
+      console.warn("[VENDOR SEARCH] API keys missing (Google or Groq). Using default vendors.");
       return NextResponse.json(DEFAULT_VENDORS);
     }
 

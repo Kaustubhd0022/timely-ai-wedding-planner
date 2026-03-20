@@ -5,8 +5,14 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
+  console.log("API triggered: /api/ai/daily-plan");
   try {
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json({ plans: [] });
+    }
     const { tasks } = await req.json();
 
     if (!tasks || tasks.length === 0) {

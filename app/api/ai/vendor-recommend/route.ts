@@ -5,8 +5,14 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
+  console.log("API triggered: /api/ai/vendor-recommend");
   try {
+    if (!process.env.GROQ_API_KEY) {
+      return NextResponse.json({ recommendation: "This vendor is a highly recommended choice for their quality and service." });
+    }
     const { vendor } = await req.json();
 
     const prompt = `You are a wedding expert.
