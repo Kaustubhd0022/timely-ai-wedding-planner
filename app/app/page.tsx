@@ -322,26 +322,24 @@ function DashboardContent() {
       </header>
       
       {/* 2. AI Daily Planner Section */}
-      <section className="grid md:grid-cols-2 gap-8 items-start">
-        <div className="space-y-6">
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* 1. Today's Focus - Intelligent Prioritization */}
+        <div className="lg:col-span-1 space-y-6">
           <div className="flex items-center gap-2 px-2">
-             <div className="h-1 w-8 bg-primary rounded-full" />
-             <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-stone-400 font-black">Today's Top 3 Tasks</h2>
+             <div className="h-1 w-4 bg-primary rounded-full" />
+             <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-stone-400">Today's Focus</h2>
           </div>
           
           <div className="space-y-4">
-            {topTasks.length > 0 ? (
+            {loading ? (
+              <div className="h-40 w-full bg-stone-50 rounded-[2.5rem] animate-pulse border-2 border-transparent" />
+            ) : topTasks.length > 0 ? (
               topTasks.map((task, idx) => (
                 <motion.div 
+                  key={task.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.1 }}
-                  key={task.id} 
-                  className="premium-card !p-5 flex items-start gap-4 hover:border-primary/20 bg-white"
-                >
-                  <button 
-                    onClick={() => handleToggleTask(task.id, task.status)}
-                    className="mt-1 h-6 w-6 rounded-full border-2 border-primary/20 flex items-center justify-center hover:bg-primary/10 transition-colors shrink-0"
                   >
                     {task.status === "Done" && <CheckCircle2 size={14} className="text-primary fill-primary/10" />}
                   </button>
@@ -428,16 +426,18 @@ function DashboardContent() {
            <div className="h-1 w-8 bg-primary rounded-full" />
            <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-stone-400">Next Best Action</h2>
         </div>
-        
-        {nextAction ? (
+
+        {loading ? (
+          <div className="bg-stone-50 h-32 w-full rounded-[2.5rem] animate-pulse" />
+        ) : !nextAction ? (
+          <div className="p-10 bg-stone-50/50 rounded-[2.5rem] border-2 border-dashed border-stone-200 text-center">
+            <Trophy className="mx-auto mb-2 text-green-500 opacity-50" size={24} />
+            <p className="text-sm font-serif text-stone-500 italic">No pending actions. You're completely on track!</p>
+          </div>
+        ) : (
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <TiltCard>
-              <Card className="rounded-[2rem] md:rounded-[2.5rem] border border-white/50 glass shadow-[0_8px_32px_rgba(0,0,0,0.04)] overflow-hidden relative group transition-all duration-700 hover:shadow-xl hover:-translate-y-1">
-                <div className="hidden md:block absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full -mr-32 -mt-32 blur-[100px] pointer-events-none" />
                 <div className="grid md:grid-cols-3">
                   <div className="md:col-span-2 p-6 md:p-10 space-y-6 md:space-y-8 relative z-10 w-full overflow-hidden">
                     <div className="space-y-4">
@@ -600,54 +600,74 @@ function DashboardContent() {
         <div className="lg:col-span-2 space-y-8">
           <div className="flex justify-between items-end mb-2 px-2">
             <div className="flex items-center gap-2">
-               <div className="h-1 w-4 bg-stone-300 rounded-full" />
-               <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-stone-400">Roadmap Overview</h2>
+              <div className="h-1 w-4 bg-stone-300 rounded-full" />
+              <h2 className="text-xs font-bold uppercase tracking-[0.3em] text-stone-400">Roadmap Overview</h2>
             </div>
-            <Button variant="ghost" size="sm" className="text-primary font-black uppercase tracking-widest text-[10px] hover:bg-transparent" onClick={() => window.location.href=`/app/tasks?wedding_id=${weddingId}`}>View Entire List</Button>
+            {tasks.length > 0 && (
+              <Button variant="ghost" size="sm" className="text-primary font-black uppercase tracking-widest text-[10px] hover:bg-transparent" onClick={() => window.location.href=`/app/tasks?wedding_id=${weddingId}`}>View Entire List</Button>
+            )}
           </div>
           
           <div className="space-y-4">
-            {tasks.filter(t => t.status !== "Done").slice(0, 6).map((task) => {
-              const blocked = isTaskBlocked(task.id, tasks, dependencies);
-              
-              return (
-                <motion.div 
-                  key={task.id} 
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  className={`flex items-center gap-6 p-6 rounded-[2.5rem] border-2 border-transparent transition-all group ${
-                    blocked ? 'bg-stone-50/50 grayscale-[0.6] opacity-60 border-stone-100' : 'bg-stone-50 border-stone-50 hover:bg-white hover:border-primary/10 hover:shadow-xl'
-                  }`}
-                >
-                  <div className={`h-14 w-14 shrink-0 rounded-[1.25rem] flex items-center justify-center transition-transform group-hover:scale-110 ${
-                    blocked ? 'bg-stone-200 text-stone-500' : 'bg-white shadow-sm text-primary'
-                  }`}>
-                    {blocked ? <Lock size={24} /> : <div className="h-6 w-6 border-2 border-stone-200 rounded-full" />}
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-bold text-xl text-stone-800 flex items-center gap-3">
-                      {task.name} 
-                      {blocked && <span className="text-[9px] font-black uppercase tracking-[0.2em] bg-stone-200 text-stone-500 px-2 py-1 rounded-lg border border-stone-300">Blocked</span>}
-                    </h4>
-                    <p className="text-[10px] text-stone-400 font-black uppercase tracking-[0.2em] mt-1">{task.category}</p>
-                  </div>
-                  <div className="text-right hidden sm:block">
-                    <p className="text-sm font-black text-stone-800">{new Date(task.deadline_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
-                    <p className="text-[9px] text-stone-400 font-black uppercase tracking-[0.2em]">Deadline</p>
-                  </div>
-                </motion.div>
-              );
-            })}
-            
-            {tasks.length > 6 && (
-              <Button 
-                variant="outline" 
-                className="w-full rounded-[2rem] py-8 border-dashed border-2 text-stone-400 hover:text-stone-900 font-bold uppercase tracking-widest text-xs"
-                onClick={() => window.location.href=`/app/tasks?wedding_id=${weddingId}`}
-              >
-                + See {tasks.length - 6} more planning steps
-              </Button>
+            {loading ? (
+              [1, 2, 3].map((i) => (
+                <div key={i} className="h-28 w-full bg-stone-50 rounded-[2.5rem] animate-pulse border-2 border-transparent" />
+              ))
+            ) : tasks.length === 0 ? (
+              <div className="p-12 text-center bg-stone-50/50 rounded-[3rem] border-2 border-dashed border-stone-200 flex flex-col items-center justify-center space-y-4">
+                <div className="h-16 w-16 bg-white rounded-3xl shadow-sm flex items-center justify-center text-stone-300">
+                  <CalendarIcon size={32} />
+                </div>
+                <div>
+                  <p className="text-lg font-serif text-stone-800">Your roadmap is waiting</p>
+                  <p className="text-xs text-stone-400 mt-1 max-w-[200px] mx-auto">Generate your timeline to see your personalized wedding journey.</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                {tasks.filter(t => t.status !== "Done").slice(0, 6).map((task) => {
+                  const blocked = isTaskBlocked(task.id, tasks, dependencies);
+                  
+                  return (
+                    <motion.div 
+                      key={task.id} 
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }}
+                      className={`flex items-center gap-6 p-6 rounded-[2.5rem] border-2 border-transparent transition-all group ${
+                        blocked ? 'bg-stone-50/50 grayscale-[0.6] opacity-60 border-stone-100' : 'bg-stone-50 border-stone-50 hover:bg-white hover:border-primary/10 hover:shadow-xl'
+                      }`}
+                    >
+                      <div className={`h-14 w-14 shrink-0 rounded-[1.25rem] flex items-center justify-center transition-transform group-hover:scale-110 ${
+                        blocked ? 'bg-stone-200 text-stone-500' : 'bg-white shadow-sm text-primary'
+                      }`}>
+                        {blocked ? <Lock size={24} /> : <div className="h-6 w-6 border-2 border-stone-200 rounded-full" />}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-xl text-stone-800 flex items-center gap-3">
+                          {task.name} 
+                          {blocked && <span className="text-[9px] font-black uppercase tracking-[0.2em] bg-stone-200 text-stone-500 px-2 py-1 rounded-lg border border-stone-300">Blocked</span>}
+                        </h4>
+                        <p className="text-[10px] text-stone-400 font-black uppercase tracking-[0.2em] mt-1">{task.category}</p>
+                      </div>
+                      <div className="text-right hidden sm:block">
+                        <p className="text-sm font-black text-stone-800">{new Date(task.deadline_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
+                        <p className="text-[9px] text-stone-400 font-black uppercase tracking-[0.2em]">Deadline</p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+                
+                {tasks.length > 6 && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full rounded-[2rem] py-8 border-dashed border-2 text-stone-400 hover:text-stone-900 font-bold uppercase tracking-widest text-xs"
+                    onClick={() => window.location.href=`/app/tasks?wedding_id=${weddingId}`}
+                  >
+                    + See {tasks.length - 6} more planning steps
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>
