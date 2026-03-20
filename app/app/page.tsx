@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getNextBestAction, getSmartAlerts, isTaskBlocked } from "@/lib/orchestrator";
 import { WhatsappOptInModal } from "@/components/whatsapp-optin-modal";
 import { MessageCircle } from "lucide-react";
+import { TiltCard } from "@/components/tilt-card";
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -225,43 +226,45 @@ function DashboardContent() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <Card className="rounded-[2.5rem] border border-white/50 glass shadow-[0_8px_32px_rgba(0,0,0,0.04)] overflow-hidden relative group transition-all duration-700 hover:shadow-xl hover:-translate-y-1">
-              <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full -mr-32 -mt-32 blur-[100px] pointer-events-none" />
-              <div className="grid md:grid-cols-3">
-                <div className="md:col-span-2 p-10 space-y-8 relative z-10">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                        <span className="px-4 py-1.5 bg-primary/20 text-primary-foreground border border-primary/30 rounded-full text-xs font-black uppercase tracking-widest">Priority {nextAction.task.priority}</span>
-                        <span className="text-secondary text-sm font-bold uppercase tracking-widest">Recommended Focus</span>
+            <TiltCard>
+              <Card className="rounded-[2.5rem] border border-white/50 glass shadow-[0_8px_32px_rgba(0,0,0,0.04)] overflow-hidden relative group transition-all duration-700 hover:shadow-xl hover:-translate-y-1">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full -mr-32 -mt-32 blur-[100px] pointer-events-none" />
+                <div className="grid md:grid-cols-3">
+                  <div className="md:col-span-2 p-10 space-y-8 relative z-10">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                          <span className="px-4 py-1.5 bg-primary/20 text-primary-foreground border border-primary/30 rounded-full text-xs font-black uppercase tracking-widest">Priority {nextAction.task.priority}</span>
+                          <span className="text-secondary text-sm font-bold uppercase tracking-widest">Recommended Focus</span>
+                      </div>
+                      <h3 className="text-5xl font-serif text-stone-900 leading-tight drop-shadow-sm">{nextAction.task.name}</h3>
+                      <p className="text-stone-500 leading-relaxed text-xl max-w-xl font-medium italic">
+                        "{nextAction.reason}"
+                      </p>
                     </div>
-                    <h3 className="text-5xl font-serif text-stone-900 leading-tight">{nextAction.task.name}</h3>
-                    <p className="text-stone-500 leading-relaxed text-xl max-w-xl font-medium italic">
-                      "{nextAction.reason}"
-                    </p>
+                    <div className="flex flex-wrap items-center gap-4">
+                      <div className="flex items-center gap-3 px-6 py-3 bg-white/60 rounded-full border border-white/40 text-stone-700 text-sm font-bold shadow-sm">
+                        <Clock size={18} className="text-primary" /> Target: {new Date(nextAction.task.deadline_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                      </div>
+                      <Button 
+                        onClick={() => window.location.href=`/app/tasks?wedding_id=${weddingId}`}
+                        className="rounded-full px-12 py-7 text-xl font-serif bg-primary text-primary-foreground hover:bg-[#d4b568] transition-all shadow-xl hover:shadow-2xl hover:scale-105"
+                      >
+                        Take this step now
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-4">
-                    <div className="flex items-center gap-3 px-6 py-3 bg-white/60 rounded-full border border-white/40 text-stone-700 text-sm font-bold shadow-sm">
-                      <Clock size={18} className="text-primary" /> Target: {new Date(nextAction.task.deadline_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                    </div>
-                    <Button 
-                      onClick={() => window.location.href=`/app/tasks?wedding_id=${weddingId}`}
-                      className="rounded-full px-12 py-7 text-xl font-serif bg-primary text-primary-foreground hover:bg-[#d4b568] transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1"
-                    >
-                      Take this step now
-                    </Button>
+                  <div className="bg-white/40 backdrop-blur-md flex flex-col items-center justify-center p-10 border-l border-white/20 text-center space-y-4">
+                      <div className="h-24 w-24 bg-white/60 rounded-full flex items-center justify-center border border-white/40 shadow-sm transition-transform group-hover:rotate-12 group-hover:scale-110 duration-700">
+                        <ShieldCheck size={48} className="text-secondary" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em]">Verified Logic</p>
+                        <p className="text-stone-800 font-serif text-lg leading-tight">AI Orchestration<br/>System</p>
+                      </div>
                   </div>
                 </div>
-                <div className="bg-white/40 backdrop-blur-md flex flex-col items-center justify-center p-10 border-l border-white/20 text-center space-y-4">
-                    <div className="h-24 w-24 bg-white/60 rounded-full flex items-center justify-center border border-white/40 shadow-sm">
-                      <ShieldCheck size={48} className="text-secondary" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-stone-400 text-[10px] font-black uppercase tracking-[0.2em]">Verified Logic</p>
-                      <p className="text-stone-800 font-serif text-lg leading-tight">AI Orchestration<br/>System</p>
-                    </div>
-                </div>
-              </div>
-            </Card>
+              </Card>
+            </TiltCard>
           </motion.div>
         ) : (
           <Card className="p-16 text-center rounded-[3rem] bg-stone-50 border-2 border-dashed border-stone-200">
@@ -324,27 +327,29 @@ function DashboardContent() {
               </div>
             )}
             
-            <Card className="rounded-[2.5rem] glass border border-white/50 p-8 shadow-sm mt-12 overflow-hidden relative">
-               <div className="absolute bottom-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mb-16 blur-2xl" />
-               <div className="flex items-center gap-3 mb-8 relative z-10">
-                 <div className="h-10 w-10 rounded-2xl bg-secondary flex items-center justify-center shadow-lg shadow-secondary/30">
-                    <CheckCircle2 size={20} className="text-white" />
+            <TiltCard>
+              <Card className="rounded-[2.5rem] glass border border-white/50 p-8 shadow-sm mt-12 overflow-hidden relative group transition-all duration-700 hover:shadow-xl hover:-translate-y-1">
+                 <div className="absolute bottom-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mb-16 blur-2xl group-hover:bg-primary/20 transition-all duration-700" />
+                 <div className="flex items-center gap-3 mb-8 relative z-10">
+                   <div className="h-10 w-10 rounded-2xl bg-secondary flex items-center justify-center shadow-lg shadow-secondary/30 transition-transform group-hover:scale-110 duration-700">
+                      <CheckCircle2 size={20} className="text-white" />
+                   </div>
+                   <h4 className="font-serif text-stone-900 text-xl">Planning Snapshot</h4>
                  </div>
-                 <h4 className="font-serif text-stone-900 text-xl">Planning Snapshot</h4>
-               </div>
-               <div className="grid grid-cols-1 gap-6 relative z-10">
-                 <div className="bg-white/60 border border-white/40 p-4 rounded-3xl">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-stone-500 mb-1">Confirmed Guests</p>
-                    <p className="text-3xl font-serif text-stone-800">{guests.length || wedding?.guest_count}</p>
+                 <div className="grid grid-cols-1 gap-6 relative z-10">
+                   <div className="bg-white/60 border border-white/40 p-4 rounded-3xl transition-transform hover:scale-105 duration-300">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-stone-500 mb-1">Confirmed Guests</p>
+                      <p className="text-3xl font-serif text-stone-800">{guests.length || wedding?.guest_count}</p>
+                   </div>
+                   <div className="bg-white/60 border border-white/40 p-4 rounded-3xl transition-transform hover:scale-105 duration-300">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-stone-500 mb-1">Total Spending</p>
+                      <p className="text-3xl font-serif text-primary italic drop-shadow-sm">
+                        ₹{budgets.reduce((acc, b) => acc + Number(b.actual_amount), 0).toLocaleString()}
+                      </p>
+                   </div>
                  </div>
-                 <div className="bg-white/60 border border-white/40 p-4 rounded-3xl">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-stone-500 mb-1">Total Spending</p>
-                    <p className="text-3xl font-serif text-primary italic">
-                      ₹{budgets.reduce((acc, b) => acc + Number(b.actual_amount), 0).toLocaleString()}
-                    </p>
-                 </div>
-               </div>
-            </Card>
+              </Card>
+            </TiltCard>
           </div>
         </div>
 

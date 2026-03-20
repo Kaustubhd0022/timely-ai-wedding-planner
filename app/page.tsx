@@ -33,18 +33,17 @@ export default function LandingPage() {
           className="flex items-center gap-3 mb-8 text-primary font-serif italic text-2xl"
         >
           <Heart size={24} className="fill-primary animate-pulse" />
-          AI-Powered Wedding Orchestration
+          Plan your wedding, without the chaos
           <Sparkles size={24} />
         </motion.div>
         
         <h1 className="text-6xl md:text-8xl font-serif mb-8 tracking-tight leading-[1.1] text-foreground">
-          Your Dream Wedding, <br />
-          <span className="text-secondary italic">Orchestrated.</span>
+          Plan your wedding, <br />
+          <span className="text-secondary italic">without the chaos.</span>
         </h1>
         
         <p className="text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed font-light">
-          Experience calm luxury. Let Timely AI manage the complexities of your special day, 
-          guiding you precisely when you need it.
+          Your AI wedding planner that thinks ahead. Experience calm luxury and let us guide you precisely when you need it.
         </p>
 
         <div className="flex gap-6">
