@@ -371,25 +371,53 @@ function DashboardContent() {
           </div>
         </div>
 
-        <div className="bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border shadow-sm space-y-4 h-full">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-2 gap-4 sm:gap-0">
-            <div className="space-y-1">
-              <h3 className="text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-stone-400">Current Progress</h3>
-              <p className="text-2xl md:text-3xl font-serif text-stone-900">{progress}% complete</p>
+        <div className="bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border shadow-sm space-y-4 h-full relative overflow-hidden">
+          {loading ? (
+            <div className="space-y-4 animate-pulse">
+              <div className="flex justify-between items-center px-2">
+                <div className="space-y-2">
+                  <div className="h-3 w-24 bg-stone-100 rounded" />
+                  <div className="h-8 w-32 bg-stone-100 rounded" />
+                </div>
+                <div className="text-right space-y-2">
+                  <div className="h-3 w-16 bg-stone-100 ml-auto rounded" />
+                  <div className="h-4 w-20 bg-stone-100 ml-auto rounded" />
+                </div>
+              </div>
+              <div className="h-5 w-full bg-stone-50 rounded-full border" />
             </div>
-            <div className="text-left sm:text-right">
-              <p className="text-stone-400 text-[10px] md:text-xs font-bold uppercase">{completedCount} / {totalTasks}</p>
-              <p className="text-stone-900 text-xs md:text-sm font-bold">Tasks Settled</p>
+          ) : tasks.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-6 text-center space-y-3">
+              <div className="h-12 w-12 bg-stone-50 rounded-2xl flex items-center justify-center text-stone-300">
+                <Activity size={24} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-stone-800">No progress data yet</p>
+                <p className="text-[10px] text-stone-400 uppercase tracking-widest mt-1">Add tasks to see your roadmap</p>
+              </div>
             </div>
-          </div>
-          <div className="h-4 md:h-5 w-full bg-stone-50 rounded-full overflow-hidden p-1 shadow-inner border">
-            <motion.div 
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
-              className="h-full bg-primary rounded-full shadow-lg shadow-primary/20"
-            />
-          </div>
+          ) : (
+            <>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-2 gap-4 sm:gap-0">
+                <div className="space-y-1">
+                  <h3 className="text-xs md:text-sm font-bold uppercase tracking-[0.2em] text-stone-400">Current Progress</h3>
+                  <p className="text-2xl md:text-3xl font-serif text-stone-900">{progress}% complete</p>
+                </div>
+                <div className="text-left sm:text-right">
+                  <p className="text-stone-400 text-[10px] md:text-xs font-bold uppercase">{completedCount} / {totalTasks}</p>
+                  <p className="text-stone-900 text-xs md:text-sm font-bold">Tasks Settled</p>
+                </div>
+              </div>
+              <div className="h-4 md:h-5 w-full bg-stone-50 rounded-full overflow-hidden p-1 shadow-inner border">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 1.5, ease: [0.22, 1, 0.36, 1] }}
+                  className="h-full bg-primary rounded-full shadow-lg shadow-primary/20"
+                />
+              </div>
+            </>
+          )}
         </div>
       </section>
 
